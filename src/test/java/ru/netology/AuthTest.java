@@ -1,34 +1,27 @@
 package ru.netology;
 
-import io.restassured.builder.RequestSpecBuilder;
-import io.restassured.filter.log.LogDetail;
-import io.restassured.http.ContentType;
-import io.restassured.specification.RequestSpecification;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import ru.netology.data.RegistrationDto;
 
-import static io.restassured.RestAssured.given;
+import static com.codeborne.selenide.Condition.*;
+import static com.codeborne.selenide.Selenide.*;
+import static ru.netology.data.UserGenerator.*;
 
 public class AuthTest {
-    private static RequestSpecification requestSpec = new RequestSpecBuilder()
-            .setBaseUri("http://localhost")
-            .setPort(9999)
-            .setAccept(ContentType.JSON)
-            .setContentType(ContentType.JSON)
-            .log(LogDetail.ALL)
-            .build();
 
-    @BeforeAll
-    static void setUpAll() {
-        // сам запрос
-        given() // "дано"
-                .spec(requestSpec) // указываем, какую спецификацию используем
-                .body(new RegistrationDto("vasya", "password", "active")) // передаём в теле объект, который будет преобразован в JSON
-                .when() // "когда"
-                .post("/api/system/users") // на какой путь, относительно BaseUri отправляем запрос
-                .then() // "тогда ожидаем"
-                .statusCode(200); // код 200 OK
+    @BeforeEach
+    void setUp() {
+        open("http://localhost:9999");
     }
 
-
+    @Test
+    void shouldSubmitActiveUser() {
+        RegistrationDto validValidActiveUser = getValidActiveUser();
+        $("[name=login]").setValue(validValidActiveUser.getLogin());
+        $("[name=password]").setValue(validValidActiveUser.getPassword());
+        $(".button__text").click();
+        $(".App_appContainer__3jRx1 h2.heading").waitUntil(exist, 5000);
+        $(".App_appContainer__3jRx1 h2.heading").shouldHave(matchesText("Личный кабинет"));
+    }
 }
